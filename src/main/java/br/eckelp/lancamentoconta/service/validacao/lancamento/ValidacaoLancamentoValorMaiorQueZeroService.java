@@ -1,4 +1,4 @@
-package br.eckelp.lancamentoconta.service.validacao;
+package br.eckelp.lancamentoconta.service.validacao.lancamento;
 
 import br.eckelp.lancamentoconta.domain.exception.ArgumentoInvalidoException;
 import br.eckelp.lancamentoconta.domain.model.Lancamento;

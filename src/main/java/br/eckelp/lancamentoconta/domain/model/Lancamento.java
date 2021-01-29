@@ -1,7 +1,10 @@
 package br.eckelp.lancamentoconta.domain.model;
 
+import com.sun.istack.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -12,6 +15,8 @@ import java.time.LocalDateTime;
 @Table(name = "lancamento")
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Lancamento {
 
     @Id
@@ -27,6 +32,7 @@ public class Lancamento {
     private FormaPagamento formaPagamento;
 
     @Builder.Default
+    @Column(nullable = false)
     private LocalDate data = LocalDate.now();
 
     private String descricao;

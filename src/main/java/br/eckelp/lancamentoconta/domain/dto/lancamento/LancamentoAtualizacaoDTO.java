@@ -1,4 +1,4 @@
-package br.eckelp.lancamentoconta.domain.dto;
+package br.eckelp.lancamentoconta.domain.dto.lancamento;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
@@ -9,9 +9,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class LancamentoCadastroDTO {
-
-    private Integer id;
+public class LancamentoAtualizacaoDTO implements ILancamentoDTO{
 
     private String descricao;
 
@@ -19,9 +17,12 @@ public class LancamentoCadastroDTO {
 
     private Integer formaPagamentoId;
 
-    @JsonFormat(pattern="yyyy-MM-dd")
-    private LocalDate data;
-
     private BigDecimal valor;
 
+    @JsonFormat(pattern="yyyy-MM-dd")
+    private LocalDate data = LocalDate.now();
+
+    public LocalDate getData() {
+        return data == null ? LocalDate.now() : data;
+    }
 }

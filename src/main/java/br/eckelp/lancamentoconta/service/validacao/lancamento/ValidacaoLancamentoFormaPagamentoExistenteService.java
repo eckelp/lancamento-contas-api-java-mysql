@@ -1,8 +1,7 @@
-package br.eckelp.lancamentoconta.service.validacao;
+package br.eckelp.lancamentoconta.service.validacao.lancamento;
 
 import br.eckelp.lancamentoconta.domain.model.Lancamento;
 import br.eckelp.lancamentoconta.service.FormaPagamentoService;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
