@@ -1,9 +1,10 @@
 package br.eckelp.lancamentoconta.resource;
 
-import br.eckelp.lancamentoconta.domain.dto.lancamento.LancamentoAtualizacaoDTO;
-import br.eckelp.lancamentoconta.domain.dto.lancamento.LancamentoCadastroDTO;
-import br.eckelp.lancamentoconta.domain.dto.lancamento.LancamentoListagemDTO;
-import br.eckelp.lancamentoconta.service.LancamentoService;
+import br.eckelp.lancamentoconta.domain.model.Lancamento;
+import br.eckelp.lancamentoconta.resource.dto.lancamento.LancamentoAtualizacaoForm;
+import br.eckelp.lancamentoconta.resource.dto.lancamento.LancamentoCadastroForm;
+import br.eckelp.lancamentoconta.resource.dto.lancamento.LancamentoDto;
+import br.eckelp.lancamentoconta.domain.service.LancamentoService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/lancamentos")
@@ -24,35 +26,38 @@ public class LancamentoResource {
     }
 
     @PostMapping
-    public ResponseEntity<?> criarLancamento(@RequestBody LancamentoCadastroDTO lancamentoCadastroDTO){
-        this.lancamentoService.criarLancamento(lancamentoCadastroDTO);
+    public ResponseEntity<LancamentoDto> criarLancamento(@RequestBody LancamentoCadastroForm lancamentoCadastroForm){
+        Lancamento lancamento = lancamentoCadastroForm.converter();
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        lancamento = this.lancamentoService.criarLancamento(lancamento);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new LancamentoDto(lancamento));
     }
 
     @PutMapping("/{lancamentoId}")
-    public ResponseEntity<?> atualizarLancamento(@PathVariable Integer lancamentoId, @RequestBody LancamentoAtualizacaoDTO lancamentoAtualizacaoDTO){
-        this.lancamentoService.atualizarLancamento(lancamentoId, lancamentoAtualizacaoDTO);
+    public ResponseEntity<LancamentoDto> atualizarLancamento(@PathVariable Integer lancamentoId, @RequestBody LancamentoAtualizacaoForm lancamentoAtualizacaoForm){
 
-        return ResponseEntity.ok().build();
+        Lancamento lancamento = lancamentoAtualizacaoForm.converter(lancamentoId);
+
+        lancamento = this.lancamentoService.atualizarLancamento(lancamentoId, lancamento);
+
+        return ResponseEntity.ok(new LancamentoDto(lancamento));
     }
 
     @DeleteMapping("/{lancamentoId}")
     public ResponseEntity<?> removerLancamento(@PathVariable Integer lancamentoId) {
 
-        try {
-            this.lancamentoService.removerLancamento(lancamentoId);
-        } catch (EmptyResultDataAccessException e) {
-            //Se não encontrar o registro então a função do endpoint também foi realizada: Não ter mais o recurso informado na base
-        }
+        this.lancamentoService.removerLancamento(lancamentoId);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{dataInicial}/{dataFinal}")
-    public ResponseEntity<List<LancamentoListagemDTO>> listarLancamentosDoMes(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataInicial, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataFinal) {
-        List<LancamentoListagemDTO> listaLancamentos = this.lancamentoService.listarLancamentos(dataInicial, dataFinal);
+    public ResponseEntity<List<LancamentoDto>> listarLancamentosDoMes(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataInicial, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataFinal) {
+        List<Lancamento> listaLancamentos = this.lancamentoService.listarLancamentos(dataInicial, dataFinal);
 
-        return ResponseEntity.ok(listaLancamentos);
+        List<LancamentoDto> lista = listaLancamentos.stream().map(lancamento -> new LancamentoDto(lancamento)).collect(Collectors.toList());
+
+        return ResponseEntity.ok(lista);
     }
 }

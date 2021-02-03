@@ -1,15 +1,12 @@
 package br.eckelp.lancamentoconta.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "categoria")
-@Getter
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

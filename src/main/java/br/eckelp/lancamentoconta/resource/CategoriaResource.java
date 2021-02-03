@@ -1,15 +1,16 @@
 package br.eckelp.lancamentoconta.resource;
 
-import br.eckelp.lancamentoconta.domain.dto.categoria.CategoriaAtualizacaoDTO;
-import br.eckelp.lancamentoconta.domain.dto.categoria.CategoriaCadastroDTO;
-import br.eckelp.lancamentoconta.domain.dto.categoria.CategoriaListagemDTO;
-import br.eckelp.lancamentoconta.service.CategoriaService;
-import org.springframework.dao.EmptyResultDataAccessException;
+import br.eckelp.lancamentoconta.domain.model.Categoria;
+import br.eckelp.lancamentoconta.resource.dto.categoria.CategoriaAtualizacaoForm;
+import br.eckelp.lancamentoconta.resource.dto.categoria.CategoriaCadastroForm;
+import br.eckelp.lancamentoconta.resource.dto.categoria.CategoriaDto;
+import br.eckelp.lancamentoconta.domain.service.CategoriaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/categorias")
@@ -22,35 +23,38 @@ public class CategoriaResource {
     }
 
     @PostMapping
-    public ResponseEntity<?> criarCategoria(@RequestBody CategoriaCadastroDTO categoriaCadastroDTO ){
-        categoriaCadastroDTO = this.categoriaService.criarCategoria(categoriaCadastroDTO);
+    public ResponseEntity<CategoriaDto> criarCategoria(@RequestBody CategoriaCadastroForm categoriaCadastroForm){
+        Categoria categoria = categoriaCadastroForm.converter();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaCadastroDTO);
+        categoria = this.categoriaService.criarCategoria(categoria);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CategoriaDto(categoria));
     }
 
     @PutMapping("/{categoriaId}")
-    public ResponseEntity<?> atualizarCategoria(@PathVariable Integer categoriaId, @RequestBody CategoriaAtualizacaoDTO categoriaAtualizacaoDTO){
-        categoriaAtualizacaoDTO = this.categoriaService.atualizarCategoria(categoriaId, categoriaAtualizacaoDTO);
+    public ResponseEntity<CategoriaDto> atualizarCategoria(@PathVariable Integer categoriaId, @RequestBody CategoriaAtualizacaoForm categoriaAtualizacaoForm){
 
-        return ResponseEntity.ok(categoriaAtualizacaoDTO);
+        Categoria categoria = categoriaAtualizacaoForm.converter(categoriaId);
+
+        categoria = this.categoriaService.atualizarCategoria(categoriaId, categoria);
+
+        return ResponseEntity.ok(new CategoriaDto(categoria));
     }
 
     @DeleteMapping("/{categoriaId}")
     public ResponseEntity<?> removerCategoria(@PathVariable Integer categoriaId) {
 
-        try {
-            this.categoriaService.removerCategoria(categoriaId);
-        } catch (EmptyResultDataAccessException e) {
-            //Se não encontrar o registro então a função do endpoint também foi realizada: Não ter mais o recurso informado na base
-        }
+        this.categoriaService.removerCategoria(categoriaId);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoriaListagemDTO>> listarCategorias() {
-        List<CategoriaListagemDTO> listaCategorias = this.categoriaService.listarCategorias();
+    public ResponseEntity<List<CategoriaDto>> listarCategorias() {
+        List<Categoria> listaCategorias = this.categoriaService.listarCategorias();
 
-        return ResponseEntity.ok(listaCategorias);
+        List<CategoriaDto> lista = listaCategorias.stream().map(categoria -> new CategoriaDto(categoria)).collect(Collectors.toList());
+
+        return ResponseEntity.ok(lista);
     }
 }

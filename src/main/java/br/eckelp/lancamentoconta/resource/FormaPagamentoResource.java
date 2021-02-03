@@ -1,15 +1,16 @@
 package br.eckelp.lancamentoconta.resource;
 
-import br.eckelp.lancamentoconta.domain.dto.formaPagamento.FormaPagamentoAtualizacaoDTO;
-import br.eckelp.lancamentoconta.domain.dto.formaPagamento.FormaPagamentoCadastroDTO;
-import br.eckelp.lancamentoconta.domain.dto.formaPagamento.FormaPagamentoListagemDTO;
-import br.eckelp.lancamentoconta.service.FormaPagamentoService;
-import org.springframework.dao.EmptyResultDataAccessException;
+import br.eckelp.lancamentoconta.domain.model.FormaPagamento;
+import br.eckelp.lancamentoconta.domain.service.FormaPagamentoService;
+import br.eckelp.lancamentoconta.resource.dto.formaPagamento.FormaPagamentoAtualizacaoForm;
+import br.eckelp.lancamentoconta.resource.dto.formaPagamento.FormaPagamentoCadastroForm;
+import br.eckelp.lancamentoconta.resource.dto.formaPagamento.FormaPagamentoDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/formas-pagamento")
@@ -22,35 +23,37 @@ public class FormaPagamentoResource {
     }
 
     @PostMapping
-    public ResponseEntity<?> criarFormaPagamento(@RequestBody FormaPagamentoCadastroDTO formaPagamentoCadastroDTO ){
-        formaPagamentoCadastroDTO = this.formaPagamentoService.criarFormaPagamento(formaPagamentoCadastroDTO);
+    public ResponseEntity<FormaPagamentoDto> criarFormaPagamento(@RequestBody FormaPagamentoCadastroForm formaPagamentoCadastroForm) {
+        FormaPagamento formaPagamento = formaPagamentoCadastroForm.converter();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(formaPagamentoCadastroDTO);
+        formaPagamento = this.formaPagamentoService.criarFormaPagamento(formaPagamento);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new FormaPagamentoDto(formaPagamento));
     }
 
     @PutMapping("/{formaPagamentoId}")
-    public ResponseEntity<?> atualizarFormaPagamento(@PathVariable Integer formaPagamentoId, @RequestBody FormaPagamentoAtualizacaoDTO formaPagamentoAtualizacaoDTO){
-        formaPagamentoAtualizacaoDTO = this.formaPagamentoService.atualizarFormaPagamento(formaPagamentoId, formaPagamentoAtualizacaoDTO);
+    public ResponseEntity<FormaPagamentoDto> atualizarFormaPagamento(@PathVariable Integer formaPagamentoId, @RequestBody FormaPagamentoAtualizacaoForm formaPagamentoAtualizacaoForm) {
+        FormaPagamento formaPagamento = formaPagamentoAtualizacaoForm.converter(formaPagamentoId);
 
-        return ResponseEntity.ok(formaPagamentoAtualizacaoDTO);
+        formaPagamento = this.formaPagamentoService.atualizarFormaPagamento(formaPagamentoId, formaPagamento);
+
+        return ResponseEntity.ok(new FormaPagamentoDto(formaPagamento));
     }
 
     @DeleteMapping("/{formaPagamentoId}")
     public ResponseEntity<?> removerFormaPagamento(@PathVariable Integer formaPagamentoId) {
 
-        try {
-            this.formaPagamentoService.removerFormaPagamento(formaPagamentoId);
-        } catch (EmptyResultDataAccessException e) {
-            //Se não encontrar o registro então a função do endpoint também foi realizada: Não ter mais o recurso informado na base
-        }
+        this.formaPagamentoService.removerFormaPagamento(formaPagamentoId);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<FormaPagamentoListagemDTO>> listarFormasPagamento() {
-        List<FormaPagamentoListagemDTO> listaFormasPagamento = this.formaPagamentoService.listarFormasPagamento();
+    public ResponseEntity<List<FormaPagamentoDto>> listarFormasPagamento() {
+        List<FormaPagamento> listaFormasPagamento = this.formaPagamentoService.listarFormasPagamento();
 
-        return ResponseEntity.ok(listaFormasPagamento);
+        List<FormaPagamentoDto> lista = listaFormasPagamento.stream().map(formaPagamento -> new FormaPagamentoDto(formaPagamento)).collect(Collectors.toList());
+
+        return ResponseEntity.ok(lista);
     }
 }

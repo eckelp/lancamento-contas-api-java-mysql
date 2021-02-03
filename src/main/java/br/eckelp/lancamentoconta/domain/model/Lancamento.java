@@ -1,10 +1,7 @@
 package br.eckelp.lancamentoconta.domain.model;
 
 import com.sun.istack.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -13,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "lancamento")
-@Getter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -45,5 +42,15 @@ public class Lancamento {
 
     public Integer getCategoriaId() {
         return this.categoria.getId();
+    }
+
+    @Transient
+    public String getDescricaoCategoria() {
+        return categoria != null ? categoria.getDescricao() : "";
+    }
+
+    @Transient
+    public String getDescricaoFormaPagamento() {
+        return formaPagamento != null ? formaPagamento.getDescricao() : "";
     }
 }
