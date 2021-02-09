@@ -6,6 +6,7 @@ import br.eckelp.lancamentoconta.sistema.infra.exception.ArgumentoInvalidoExcept
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Service
 public class ValidacaoLancamentoValorMaiorQueZeroUseCase implements IValidacaoLancamentoUseCase {
@@ -15,7 +16,7 @@ public class ValidacaoLancamentoValorMaiorQueZeroUseCase implements IValidacaoLa
 
         BigDecimal novoValor = lancamento.getValor();
 
-        if(BigDecimal.ZERO.compareTo(novoValor) >= 0){
+        if(Objects.isNull(novoValor) || BigDecimal.ZERO.compareTo(novoValor) >= 0){
             throw new ArgumentoInvalidoException("O valor do lançamento deve ser maior que zero");
         }
 
