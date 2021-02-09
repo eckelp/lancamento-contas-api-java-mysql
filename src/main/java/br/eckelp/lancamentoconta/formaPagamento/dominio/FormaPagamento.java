@@ -21,4 +21,8 @@ public class FormaPagamento {
     public FormaPagamento(Integer id) {
         this.id = id;
     }
+
+    public FormaPagamento(String descricao) {
+        this.descricao = descricao;
+    }
 }

@@ -4,6 +4,7 @@ import br.eckelp.lancamentoconta.categoria.CategoriaCenarioTest;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import br.eckelp.lancamentoconta.categoria.dominio.interfaces.IBuscarUmaCategoriaUseCase;
 import br.eckelp.lancamentoconta.categoria.infra.ICategoriaRepository;
+import br.eckelp.lancamentoconta.sistema.infra.exception.ObjetoNaoEncontradoException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,13 @@ public class BuscarUmaCategoriaUseCaseTest {
         Categoria categoria = buscarUmaCategoriaUseCase.porId(1);
 
         Assert.assertNotNull(categoria);
+
+    }
+
+    @Test(expected = ObjetoNaoEncontradoException.class)
+    public void deveLancarExceptionQuandoNaoEncontrarCategoriaPeloId() {
+
+        buscarUmaCategoriaUseCase.porId(-1);
 
     }
 
