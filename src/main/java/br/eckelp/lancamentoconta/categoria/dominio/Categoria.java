@@ -1,5 +1,7 @@
 package br.eckelp.lancamentoconta.categoria.dominio;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -18,11 +20,17 @@ public class Categoria {
 
     private String descricao;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
     public Categoria(Integer id) {
         this.id = id;
     }
 
-    public Categoria(String descricao) {
+    public Categoria(String descricao, Usuario usuario) {
         this.descricao = descricao;
+        this.usuario = usuario;
     }
 }

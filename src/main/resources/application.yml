@@ -11,3 +11,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+security:
+  chave: "4R;40TAqR2WB,&7}lU^(]CDTWf`<BK7D~*._Ld`2T9/$ZhItYW0Z]1}2eK>K0.4R;40TAqR2WB,&7}lU^(]CDTWf`<BK7D~*._Ld`2T9/$ZhItYW0Z]1}2eK>K0."
+  issuer: "lancamento-contas-api"

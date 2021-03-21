@@ -1,5 +1,7 @@
 package br.eckelp.lancamentoconta.categoria.controller;
 
+import br.eckelp.lancamentoconta.app.security.context.UsuarioContext;
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.dominio.*;
 import br.eckelp.lancamentoconta.categoria.dominio.dto.CategoriaAtualizacaoForm;
 import br.eckelp.lancamentoconta.categoria.dominio.dto.CategoriaCadastroForm;
@@ -60,7 +62,9 @@ public class CategoriaController {
 
     @GetMapping
     public ResponseEntity<List<CategoriaDto>> listarCategorias() {
-        List<Categoria> listaCategorias = this.buscarTodasCategoriasUseCase.buscarTodas();
+        Usuario usuario = UsuarioContext.getUsuario();
+
+        List<Categoria> listaCategorias = this.buscarTodasCategoriasUseCase.buscarTodas(usuario);
 
         List<CategoriaDto> lista = listaCategorias.stream().map(CategoriaDto::new).collect(Collectors.toList());
 

@@ -1,22 +1,29 @@
 package br.eckelp.lancamentoconta.lancamento.controller;
 
+import br.eckelp.lancamentoconta.RequestCenarioTest;
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
+import br.eckelp.lancamentoconta.app.security.repository.IUsuarioRepository;
+import br.eckelp.lancamentoconta.app.security.service.EncoderService;
 import br.eckelp.lancamentoconta.categoria.CategoriaCenarioTest;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import br.eckelp.lancamentoconta.categoria.infra.ICategoriaRepository;
-import br.eckelp.lancamentoconta.formaPagamento.FormaPagamentoCenarioTest;
-import br.eckelp.lancamentoconta.formaPagamento.dominio.FormaPagamento;
-import br.eckelp.lancamentoconta.formaPagamento.infra.IFormaPagamentoRepository;
+import br.eckelp.lancamentoconta.formapagamento.FormaPagamentoCenarioTest;
+import br.eckelp.lancamentoconta.formapagamento.dominio.FormaPagamento;
+import br.eckelp.lancamentoconta.formapagamento.infra.IFormaPagamentoRepository;
 import br.eckelp.lancamentoconta.lancamento.LancamentoCenarioTest;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
 import br.eckelp.lancamentoconta.lancamento.dominio.dto.LancamentoAtualizacaoForm;
 import br.eckelp.lancamentoconta.lancamento.dominio.dto.LancamentoCadastroForm;
 import br.eckelp.lancamentoconta.lancamento.infra.ILancamentoRepository;
+import br.eckelp.lancamentoconta.usuario.UsuarioCenarioTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -36,21 +43,38 @@ public class LancamentoControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ILancamentoRepository repository;
-
     @Autowired
     private ICategoriaRepository categoriaRepository;
-
     @Autowired
     private IFormaPagamentoRepository formaPagamentoRepository;
+    @Autowired
+    private EncoderService encoderService;
+    @Autowired
+    private IUsuarioRepository usuarioRepository;
+
+    private LancamentoCenarioTest cenario;
+    private CategoriaCenarioTest cenarioCategoria;
+    private FormaPagamentoCenarioTest cenarioFormaPagamento;
+    private UsuarioCenarioTest cenarioUsuario;
+
+    @Before
+    public void cenario() {
+        this.cenario = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository);
+        this.cenarioFormaPagamento = new FormaPagamentoCenarioTest(formaPagamentoRepository);
+        this.cenarioCategoria = new CategoriaCenarioTest(categoriaRepository);
+        this.cenarioUsuario = new UsuarioCenarioTest(encoderService, usuarioRepository);
+    }
 
     @Test
     public void deveCriarUmLancamento() throws Exception {
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
         URI uri = new URI("/lancamentos");
 
         LancamentoCadastroForm form = LancamentoCadastroForm.builder()
@@ -67,6 +91,7 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.descricao").value(form.getDescricao()))
@@ -75,9 +100,10 @@ public class LancamentoControllerTest {
 
     @Test
     public void naoDeveriaCriarLancamentoComDescricaoVazia() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -94,14 +120,16 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaCriarLancamentoSemCategoria() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -117,14 +145,17 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaCriarLancamentoSemFormaPagamento() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -140,15 +171,19 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaCriarLancamentoSemValor() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+
+
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -164,15 +199,18 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaCriarLancamentoComValorZerado() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -189,15 +227,18 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaCriarLancamentoComValorNegativo() throws Exception{
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         URI uri = new URI("/lancamentos");
 
@@ -214,13 +255,15 @@ public class LancamentoControllerTest {
                                 .post(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void deveriaAtualizarUmLancamento() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -237,6 +280,7 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.descricao").value(form.getDescricao()));
@@ -245,7 +289,8 @@ public class LancamentoControllerTest {
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoSemDescricao() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -262,6 +307,7 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
@@ -269,7 +315,8 @@ public class LancamentoControllerTest {
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoSemCategoria() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .formaPagamentoId(lancamentoOriginal.getFormaPagamentoId())
@@ -285,13 +332,15 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoSemFormaPagamento() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -307,13 +356,15 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoSemValor() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -329,13 +380,15 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoComValorZerado() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -352,6 +405,7 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
@@ -359,7 +413,8 @@ public class LancamentoControllerTest {
 
     @Test
     public void naoDeveriaAtualizarUmLancamentoComValorNegativo() throws Exception {
-        Lancamento lancamentoOriginal = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Lançamento para atualizar");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento lancamentoOriginal = this.cenario.criarLancamento("Lançamento para atualizar", usuario);
 
         LancamentoAtualizacaoForm form = LancamentoAtualizacaoForm.builder()
                 .categoriaId(lancamentoOriginal.getCategoriaId())
@@ -376,6 +431,7 @@ public class LancamentoControllerTest {
                                 .put(uri)
                                 .content(new ObjectMapper().writeValueAsString(form))
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
@@ -384,14 +440,20 @@ public class LancamentoControllerTest {
     @Test
     public void deveriaRemoverLancamento() throws Exception{
 
-        Lancamento dinheiro = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamento("Remover este lançamento");
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Lancamento dinheiro = this.cenario.criarLancamento("Remover este lançamento", usuario);
 
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .delete(new URI("/lancamentos/" + dinheiro.getId()))
+                                .headers(headers(usuario))
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
+    }
+
+    private HttpHeaders headers(Usuario usuario) throws Exception {
+        return new RequestCenarioTest(mockMvc).headers(usuario);
     }
 }

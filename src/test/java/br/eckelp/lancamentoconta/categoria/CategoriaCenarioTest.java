@@ -1,5 +1,7 @@
 package br.eckelp.lancamentoconta.categoria;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
+import br.eckelp.lancamentoconta.app.security.repository.IUsuarioRepository;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import br.eckelp.lancamentoconta.categoria.infra.ICategoriaRepository;
 import org.springframework.context.annotation.Profile;
@@ -14,26 +16,25 @@ public class CategoriaCenarioTest {
         this.inicializarCenarioVazio();
     }
 
-    public Categoria criarUmaCategoria(String descricao){
-        Categoria categoria =  new Categoria(descricao);
+    public Categoria criarUmaCategoria(String descricao, Usuario usuario){
+        Categoria categoria =  new Categoria(descricao, usuario);
 
         return repository.save(categoria);
     }
 
-    public void criarListaCategoriasValidas(){
+    public void criarListaCategoriasValidas(Usuario usuario){
 
-        Categoria mercado = new Categoria("Mercado");
-        Categoria alimentacao = new Categoria("Alimentação");
+        Categoria mercado = new Categoria("Mercado", usuario);
+        Categoria alimentacao = new Categoria("Alimentação", usuario);
 
-        mercado = repository.save(mercado);
-        alimentacao = repository.save(alimentacao);
+        repository.save(mercado);
+        repository.save(alimentacao);
 
     }
 
     public void inicializarCenarioVazio(){
         repository.deleteAll();
     }
-
 
 
 }

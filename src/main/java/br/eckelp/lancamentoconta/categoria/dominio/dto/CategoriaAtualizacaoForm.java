@@ -1,5 +1,7 @@
 package br.eckelp.lancamentoconta.categoria.dominio.dto;
 
+import br.eckelp.lancamentoconta.app.security.context.UsuarioContext;
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,14 +16,12 @@ public class CategoriaAtualizacaoForm {
 
     private String descricao;
 
-    public Categoria criarCategoria() {
-        return criarCategoria(id);
-    }
-
-    public Categoria criarCategoria(Integer categoriaId) {
+    public Categoria criarCategoria(Integer categoriaId, Usuario usuario) {
         return Categoria.builder()
                 .id(categoriaId)
-                .descricao(descricao).build();
+                .descricao(descricao)
+                .usuario(usuario)
+                .build();
     }
 
     public CategoriaAtualizacaoForm(String descricao) {

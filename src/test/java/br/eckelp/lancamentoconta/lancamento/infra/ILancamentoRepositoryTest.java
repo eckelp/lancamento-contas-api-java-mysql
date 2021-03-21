@@ -1,13 +1,17 @@
 package br.eckelp.lancamentoconta.lancamento.infra;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
+import br.eckelp.lancamentoconta.app.security.repository.IUsuarioRepository;
+import br.eckelp.lancamentoconta.app.security.service.EncoderService;
 import br.eckelp.lancamentoconta.categoria.CategoriaCenarioTest;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import br.eckelp.lancamentoconta.categoria.infra.ICategoriaRepository;
-import br.eckelp.lancamentoconta.formaPagamento.FormaPagamentoCenarioTest;
-import br.eckelp.lancamentoconta.formaPagamento.dominio.FormaPagamento;
-import br.eckelp.lancamentoconta.formaPagamento.infra.IFormaPagamentoRepository;
+import br.eckelp.lancamentoconta.formapagamento.FormaPagamentoCenarioTest;
+import br.eckelp.lancamentoconta.formapagamento.dominio.FormaPagamento;
+import br.eckelp.lancamentoconta.formapagamento.infra.IFormaPagamentoRepository;
 import br.eckelp.lancamentoconta.lancamento.LancamentoCenarioTest;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
+import br.eckelp.lancamentoconta.usuario.UsuarioCenarioTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,17 +35,34 @@ public class ILancamentoRepositoryTest {
 
     @Autowired
     private ILancamentoRepository repository;
-
     @Autowired
-    private ICategoriaRepository categoriaRepository;
-
+    ICategoriaRepository categoriaRepository;
     @Autowired
-    private IFormaPagamentoRepository formaPagamentoRepository;
+    IFormaPagamentoRepository formaPagamentoRepository;
+    @Autowired
+    private EncoderService encoderService;
+    @Autowired
+    private IUsuarioRepository usuarioRepository;
+
+
+    private UsuarioCenarioTest cenarioUsuario;
+    private LancamentoCenarioTest cenario;
+    private CategoriaCenarioTest cenarioCategoria;
+    private FormaPagamentoCenarioTest cenarioFormaPagamento;
+
+    @Before
+    public void cenario () {
+        this.cenario = new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository);
+        this.cenarioCategoria = new CategoriaCenarioTest(categoriaRepository);
+        this.cenarioFormaPagamento = new FormaPagamentoCenarioTest(formaPagamentoRepository);
+        this.cenarioUsuario = new UsuarioCenarioTest(encoderService, usuarioRepository);
+    }
 
 
     @Test
     public void deveriaCarregarListaDeFormasPagamento() {
-        new LancamentoCenarioTest(repository, categoriaRepository, formaPagamentoRepository).criarLancamentosValidos();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        this.cenario.criarLancamentosValidos(usuario);
 
         List<Lancamento> lancamentos = repository.listarLancamentos(LocalDate.now().minusDays(1L), LocalDate.now().plusDays(1L));
 
@@ -51,9 +72,10 @@ public class ILancamentoRepositoryTest {
 
     @Test
     public void deveriaCarregarUmLancamento() {
-        new LancamentoCenarioTest(repository).inicializarCenarioVazio();
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+        this.cenario.inicializarCenarioVazio();
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        Categoria mercado = this.cenarioCategoria.criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = this.cenarioFormaPagamento.criarFormaPagamento("Dinheiro", usuario);
 
         Lancamento lancamento = Lancamento.builder()
                 .categoria(mercado)
@@ -61,6 +83,7 @@ public class ILancamentoRepositoryTest {
                 .descricao("Novo Lançamento")
                 .valor(BigDecimal.TEN)
                 .data(LocalDate.now())
+                .usuario(usuario)
                 .build();
 
         Lancamento lancamentoCadastrado = repository.save(lancamento);

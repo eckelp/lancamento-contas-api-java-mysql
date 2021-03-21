@@ -1,13 +1,12 @@
 package br.eckelp.lancamentoconta.lancamento.controller;
 
+import br.eckelp.lancamentoconta.app.security.context.UsuarioContext;
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
 import br.eckelp.lancamentoconta.lancamento.dominio.dto.LancamentoAtualizacaoForm;
 import br.eckelp.lancamentoconta.lancamento.dominio.dto.LancamentoCadastroForm;
 import br.eckelp.lancamentoconta.lancamento.dominio.dto.LancamentoDto;
-import br.eckelp.lancamentoconta.lancamento.dominio.interfaces.IAtualizarLancamentoUseCase;
-import br.eckelp.lancamentoconta.lancamento.dominio.interfaces.IBuscarTodosLancamentoPorDataUseCase;
-import br.eckelp.lancamentoconta.lancamento.dominio.interfaces.ICadastrarLancamentoUseCase;
-import br.eckelp.lancamentoconta.lancamento.dominio.interfaces.IRemoverLancamentoUseCase;
+import br.eckelp.lancamentoconta.lancamento.dominio.interfaces.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,16 +22,19 @@ public class LancamentoController {
 
     private final ICadastrarLancamentoUseCase cadastrarLancamentoUseCase;
     private final IAtualizarLancamentoUseCase atualizarLancamentoUseCase;
-    private final IBuscarTodosLancamentoPorDataUseCase buscarTodosLancamentoPorDataUseCase;
+    private final IBuscarTodosLancamentosPorDataUseCase buscarTodosLancamentoPorDataUseCase;
+    private final IBuscarTodosLancamentosUseCase buscarTodosLancamentosUseCase;
     private final IRemoverLancamentoUseCase removerLancamentoUseCase;
 
     public LancamentoController(ICadastrarLancamentoUseCase cadastrarLancamentoUseCase,
                                 IAtualizarLancamentoUseCase atualizarLancamentoUseCase,
-                                IBuscarTodosLancamentoPorDataUseCase buscarTodosLancamentoPorDataUseCase,
+                                IBuscarTodosLancamentosPorDataUseCase buscarTodosLancamentoPorDataUseCase,
+                                IBuscarTodosLancamentosUseCase buscarTodosLancamentosUseCase,
                                 IRemoverLancamentoUseCase removerLancamentoUseCase) {
         this.cadastrarLancamentoUseCase = cadastrarLancamentoUseCase;
         this.atualizarLancamentoUseCase = atualizarLancamentoUseCase;
         this.buscarTodosLancamentoPorDataUseCase = buscarTodosLancamentoPorDataUseCase;
+        this.buscarTodosLancamentosUseCase = buscarTodosLancamentosUseCase;
         this.removerLancamentoUseCase = removerLancamentoUseCase;
     }
 
@@ -58,6 +60,17 @@ public class LancamentoController {
         this.removerLancamentoUseCase.remover(lancamentoId);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LancamentoDto>> listarLancamentos() {
+        Usuario usuario = UsuarioContext.getUsuario();
+        List<Lancamento> listaLancamentos = this.buscarTodosLancamentosUseCase.buscarTodos(usuario);
+
+        List<LancamentoDto> lista = listaLancamentos.stream().map(LancamentoDto::new).collect(Collectors.toList());
+
+        return ResponseEntity.ok(lista);
+
     }
 
     @GetMapping("/{dataInicial}/{dataFinal}")

@@ -1,5 +1,6 @@
 package br.eckelp.lancamentoconta.categoria.infra;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,8 +14,8 @@ public interface ICategoriaRepository extends JpaRepository<Categoria, Integer> 
 
 
     @Query("SELECT c " +
-            " FROM Categoria c")
-    List<Categoria> listarCategorias();
+            " FROM Categoria c WHERE c.usuario = :usuario")
+    List<Categoria> listarCategorias(Usuario usuario);
 
     @Override
     @Modifying

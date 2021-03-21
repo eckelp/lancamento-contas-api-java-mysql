@@ -1,14 +1,14 @@
 package br.eckelp.lancamentoconta.lancamento;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.CategoriaCenarioTest;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
 import br.eckelp.lancamentoconta.categoria.infra.ICategoriaRepository;
-import br.eckelp.lancamentoconta.formaPagamento.FormaPagamentoCenarioTest;
-import br.eckelp.lancamentoconta.formaPagamento.dominio.FormaPagamento;
-import br.eckelp.lancamentoconta.formaPagamento.infra.IFormaPagamentoRepository;
+import br.eckelp.lancamentoconta.formapagamento.FormaPagamentoCenarioTest;
+import br.eckelp.lancamentoconta.formapagamento.dominio.FormaPagamento;
+import br.eckelp.lancamentoconta.formapagamento.infra.IFormaPagamentoRepository;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
 import br.eckelp.lancamentoconta.lancamento.infra.ILancamentoRepository;
-import org.apache.tomcat.jni.Local;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,20 +35,21 @@ public class LancamentoCenarioTest {
 
 
 
-    public Lancamento criarLancamento(String descricao){
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
+    public Lancamento criarLancamento(String descricao, Usuario usuario){
+        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro", usuario);
 
-       return criarLancamento(descricao, mercado, dinheiro);
+       return criarLancamento(descricao, usuario, mercado, dinheiro);
     }
 
-    private Lancamento criarLancamento(String descricao, Categoria categoria, FormaPagamento formaPagamento){
+    private Lancamento criarLancamento(String descricao, Usuario usuario, Categoria categoria, FormaPagamento formaPagamento){
         Lancamento lancamento = Lancamento.builder()
                 .descricao(descricao)
                 .categoria(categoria)
                 .formaPagamento(formaPagamento)
                 .valor(BigDecimal.TEN)
                 .data(LocalDate.now())
+                .usuario(usuario)
                 .build();
 
         return repository.save(lancamento);
@@ -58,10 +59,11 @@ public class LancamentoCenarioTest {
         repository.deleteAll();
     }
 
-    public void criarLancamentosValidos() {
-        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado");
-        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro");
-        this.criarLancamento("Novo Lançamento 1", mercado, dinheiro);
-        this.criarLancamento("Novo Lançamento 2", mercado, dinheiro);
+    public void criarLancamentosValidos(Usuario usuario) {
+        Categoria mercado = new CategoriaCenarioTest(categoriaRepository).criarUmaCategoria("Mercado", usuario);
+        FormaPagamento dinheiro = new FormaPagamentoCenarioTest(formaPagamentoRepository).criarFormaPagamento("Dinheiro", usuario);
+
+        this.criarLancamento("Novo Lançamento 1", usuario, mercado, dinheiro);
+        this.criarLancamento("Novo Lançamento 2", usuario, mercado, dinheiro);
     }
 }

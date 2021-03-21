@@ -1,7 +1,11 @@
 package br.eckelp.lancamentoconta.categoria.infra;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
+import br.eckelp.lancamentoconta.app.security.repository.IUsuarioRepository;
+import br.eckelp.lancamentoconta.app.security.service.EncoderService;
 import br.eckelp.lancamentoconta.categoria.CategoriaCenarioTest;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
+import br.eckelp.lancamentoconta.usuario.UsuarioCenarioTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,19 +27,27 @@ public class ICategoriaRepositoryTest {
 
     @Autowired
     private ICategoriaRepository repository;
+    @Autowired
+    private IUsuarioRepository usuarioRepository;
+    @Autowired
+    private EncoderService encoderService;
+
+    private CategoriaCenarioTest cenario;
+    private UsuarioCenarioTest cenarioUsuario;
 
     @Before
     public void construirCenario() {
-
-        new CategoriaCenarioTest(repository).criarListaCategoriasValidas();
-
+        this.cenario = new CategoriaCenarioTest(repository);
+        this.cenarioUsuario = new UsuarioCenarioTest(encoderService, usuarioRepository);
     }
 
 
     @Test
     public void deveriaCarregarListaDeCategorias() {
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        this.cenario.criarListaCategoriasValidas(usuario);
 
-        List<Categoria> lista = repository.listarCategorias();
+        List<Categoria> lista = repository.listarCategorias(usuario);
 
         Assert.assertFalse(lista.isEmpty());
 
@@ -43,6 +55,9 @@ public class ICategoriaRepositoryTest {
 
     @Test
     public void deveriaCarregarUmaCategoria() {
+        Usuario usuario = this.cenarioUsuario.getUsuario();
+        this.cenario.criarListaCategoriasValidas(usuario);
+
         List<Categoria> categorias = repository.findAll();
 
         Assert.assertFalse(categorias.isEmpty());

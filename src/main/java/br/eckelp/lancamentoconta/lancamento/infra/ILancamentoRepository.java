@@ -1,5 +1,6 @@
 package br.eckelp.lancamentoconta.lancamento.infra;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,6 +19,13 @@ public interface ILancamentoRepository extends JpaRepository<Lancamento, Integer
             " ORDER BY l.data desc"
     )
     List<Lancamento> listarLancamentos(LocalDate dataInicial, LocalDate dataFinal);
+
+    @Query("    SELECT l " +
+            "     FROM Lancamento l " +
+            "     WHERE l.usuario = :usuario" +
+            " ORDER BY l.data desc"
+    )
+    List<Lancamento> listarLancamentos(Usuario usuario);
 
     @Override
     @Modifying

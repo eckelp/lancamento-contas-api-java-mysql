@@ -1,7 +1,8 @@
 package br.eckelp.lancamentoconta.lancamento.dominio;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
-import br.eckelp.lancamentoconta.formaPagamento.dominio.FormaPagamento;
+import br.eckelp.lancamentoconta.formapagamento.dominio.FormaPagamento;
 import lombok.*;
 
 import javax.persistence.*;
@@ -28,6 +29,10 @@ public class Lancamento {
     @JoinColumn(name = "forma_pagamento_id")
     private FormaPagamento formaPagamento;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
     @Builder.Default
     @Column(nullable = false)
     private LocalDate data = LocalDate.now();
@@ -52,5 +57,13 @@ public class Lancamento {
     @Transient
     public String getDescricaoFormaPagamento() {
         return formaPagamento != null ? formaPagamento.getDescricao() : "";
+    }
+
+    public Long getUsuarioId() {
+        return usuario != null ? usuario.getId() : null;
+    }
+
+    public String getUsuarioNome(){
+        return usuario != null ? usuario.getNome() : null;
     }
 }

@@ -1,7 +1,8 @@
 package br.eckelp.lancamentoconta.lancamento.dominio.dto;
 
+import br.eckelp.lancamentoconta.app.security.dominio.Usuario;
 import br.eckelp.lancamentoconta.categoria.dominio.Categoria;
-import br.eckelp.lancamentoconta.formaPagamento.dominio.FormaPagamento;
+import br.eckelp.lancamentoconta.formapagamento.dominio.FormaPagamento;
 import br.eckelp.lancamentoconta.lancamento.dominio.Lancamento;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -38,12 +39,13 @@ public class LancamentoCadastroForm {
         return data == null ? LocalDate.now() : data;
     }
 
-    public Lancamento criarLancamento() {
+    public Lancamento criarLancamento(Usuario usuario) {
         return Lancamento.builder()
                 .id(id)
                 .descricao(descricao)
                 .categoria(new Categoria(categoriaId))
                 .formaPagamento(new FormaPagamento(formaPagamentoId))
+                .usuario(usuario)
                 .data(data)
                 .valor(valor)
                 .build();
