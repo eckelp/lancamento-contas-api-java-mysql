@@ -29,3 +29,6 @@ target/
 .mvn/
 
 .idea/
+
+.database/
+docker-compose.yml
